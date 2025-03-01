@@ -22,3 +22,7 @@ This folder contains YAML snippet files for generating secure secrets in Termius
 4. Select the `.yml` file you want to import
 
 ---
+
+## Script Files
+
+The script files have been moved to the `scripts` folder for better organization.

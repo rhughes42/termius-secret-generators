@@ -5,14 +5,18 @@
 # Provided as-is under the MIT license without any responsibility for its use or damage caused by its use.
 
 # Source the common functions and variables.
-source ./common-functions.sh
+source ./scripts/common-functions.sh
 
 LOG_FILE=~/.secret_log # If necessary, change this to a different path.
-SCRIPT="gen-secret.sh"
+SCRIPT="gen-encrypted-secret.sh"
 
 # Declare an associative array to hold variables.
 declare -A VARS=(
     ["length"]=""
+    ["encrypt"]=""
+    ["persist"]=""
+    ["auto_delete"]=""
+    ["seed"]=""
 )
 
 # Add timing function and start stopwatch
@@ -33,6 +37,26 @@ print_elapsed_time "Variable Validation" $start_validation $LOG_FILE $SCRIPT
 start_secret_gen=$(date +%s%3N)
 SECRET=$(openssl rand -hex "${VARS["length"]}")
 print_elapsed_time "Secret Generation" $start_secret_gen $LOG_FILE $SCRIPT
+
+# Encrypt the secret if requested.
+if [ "${VARS["encrypt"]}" = 1 ]; then
+    encryption_start=$(date +%s%3N)
+    echo "Encrypting the secret..."
+
+    gpg --batch --yes --symmetric --cipher-algo AES256 ~/.generated_secret
+    echo "Securely deleting the original secret file..."
+    secure_delete ~/.generated_secret
+
+    echo "Secret encrypted to ~/.generated_secret.gpg"
+    print_elapsed_time "Encryption" $encryption_start $LOG_FILE $SCRIPT
+else
+    encryption_start=$(date +%s%3N)
+    echo "Secret not encrypted, securely deleting the original secret file..."
+
+    secure_delete ~/.generated_secret
+
+    print_elapsed_time "Non-Encryption Operation" $encryption_start $LOG_FILE $SCRIPT
+fi
 
 # Log the secret generation.
 if [ -f "$LOG_FILE" ]; then

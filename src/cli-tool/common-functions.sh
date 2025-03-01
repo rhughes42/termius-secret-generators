@@ -4,16 +4,24 @@
 # Contact details can be found on our website.
 # Provided as-is under the MIT license without any responsibility for its use or damage caused by its use.
 
+# common-functions.sh
+# This script contains common utility functions used across various scripts in the project.
+
 # Calculates the elapsed time for a section of code.
+# Arguments:
+#   $1 - Section name
+#   $2 - Start time in milliseconds
+#   $3 - Log file path (optional)
+#   $4 - Current file name (optional)
 print_elapsed_time() {
     local section="$1"
     local s_time="$2"
-	local log_file="$3"
-	local current_file="$4"
+    local log_file="$3"
+    local current_file="$4"
 
     local e_time=$(date +%s%3N)
 
-	# Calculates the time difference in milliseconds.
+    # Calculates the time difference in milliseconds.
     s_time=$(date -d @$((s_time / 1000)) +%s%3N)
     local message="[$section] → Execution time: $((e_time - s_time)) milliseconds"
     echo "$message"
@@ -25,6 +33,9 @@ print_elapsed_time() {
 }
 
 # Function to check if a key in a dictionary is set.
+# Arguments:
+#   $1 - Dictionary (associative array) name
+#   $2 - Key to check
 check_dict_key() {
     local -n dict="$1" # Get the dictionary by reference.
     local key="$2" # Get the key.
@@ -55,10 +66,12 @@ check_dict_key() {
 
 # Get the current timestamp in the desired format.
 get_timestamp() {
-	date '+%d-%m-%Y %-I:%M%P' # Get the current timestamp in the desired format.
+    date '+%d-%m-%Y %-I:%M%P' # Get the current timestamp in the desired format.
 }
 
 # Securely delete a file depending on the available command.
+# Arguments:
+#   $1 - File path to be securely deleted
 secure_delete() {
     local file="$1" # Get the file to be securely deleted.
     if command -v shred > /dev/null 2>&1; then # Check if shred is available.
@@ -71,14 +84,17 @@ secure_delete() {
 }
 
 # Securely delete a file depending on the available command.
+# Arguments:
+#   $1 - Array of variables to sanitize
+#   $2 - Array of files to securely delete
 sanitize_environment() {
-	local sanitize_vars="$1"
-	local sanitize_files="$2"
+    local sanitize_vars="$1"
+    local sanitize_files="$2"
 
     if command -v shred > /dev/null 2>&1; then # Check if shred is available.
         echo "Shredding any remaining data..."
-		unset "${sanitize_vars[@]}"
-		shred -u "${sanitize_files[@]}"
+        unset "${sanitize_vars[@]}"
+        shred -u "${sanitize_files[@]}"
     elif command -v srm > /dev/null 2>&1; then # Check if srm is available.
         echo "Shredding any remaining data..."
         unset "${sanitize_vars[@]}"
@@ -91,30 +107,36 @@ sanitize_environment() {
 }
 
 # Function to send the secret to the webhook.
+# Arguments:
+#   $1 - Secret to send
+#   $2 - Webhook URL
+#   $3 - HMAC secret for signing
+#   $4 - Number of retries
+#   $5 - Delay between retries
 send_to_webhook() {
-	local secret=$1
-	local url=$2
-	local hmac_secret=$3
-	local retries=$4
-	local delay=$5
+    local secret=$1
+    local url=$2
+    local hmac_secret=$3
+    local retries=$4
+    local delay=$5
 
-	for ((i=0; i<retries; i++)); do
-		timestamp=$(date +%s)
-		signature=$(echo -n "$secret$timestamp" | openssl dgst -sha256 -hmac "$hmac_secret" | awk '{print $2}')
-		response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$url" \
-			-H "Content-Type: application/json" \
-			-H "X-Hub-Signature: sha256=$signature" \
-			-d "{\"secret\":\"$secret\", \"timestamp\":\"$timestamp\"}")
+    for ((i=0; i<retries; i++)); do
+        timestamp=$(date +%s)
+        signature=$(echo -n "$secret$timestamp" | openssl dgst -sha256 -hmac "$hmac_secret" | awk '{print $2}')
+        response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$url" \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature: sha256=$signature" \
+            -d "{\"secret\":\"$secret\", \"timestamp\":\"$timestamp\"}")
 
-		if [ "$response" -eq 200 ]; then
-			echo "Secret successfully sent to webhook."
-			return 0
-		else
-			echo "Failed to send secret to webhook. Attempt $((i+1)) of $retries."
-			sleep "$delay"
-		fi
-	done
+        if [ "$response" -eq 200 ]; then
+            echo "Secret successfully sent to webhook."
+            return 0
+        else
+            echo "Failed to send secret to webhook. Attempt $((i+1)) of $retries."
+            sleep "$delay"
+        fi
+    done
 
-	echo "Failed to send secret to webhook after $retries attempts."
-	return 1
+    echo "Failed to send secret to webhook after $retries attempts."
+    return 1
 }

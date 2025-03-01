@@ -5,7 +5,7 @@
 # Provided as-is under the MIT license without any responsibility for its use or damage caused by its use.
 
 # Source the common functions and variables.
-source ./common-functions.sh\
+source ./scripts/common-functions.sh
 
 LOG_FILE=~/.secret_log # If necessary, change this to a different path.
 SCRIPT="gen-and-transmit-secret.sh"
