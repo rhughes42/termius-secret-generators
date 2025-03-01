@@ -100,6 +100,7 @@ Contributions are welcome. Fork, make changes, and submit a pull request.
 This script contains common utility functions used across various scripts in the project.
 
 - **print_elapsed_time**: Calculates the elapsed time for a section of code.
+
   - Arguments:
     - $1 - Section name
     - $2 - Start time in milliseconds
@@ -107,6 +108,7 @@ This script contains common utility functions used across various scripts in the
     - $4 - Current file name (optional)
 
 - **check_dict_key**: Function to check if a key in a dictionary is set.
+
   - Arguments:
     - $1 - Dictionary (associative array) name
     - $2 - Key to check
@@ -114,10 +116,12 @@ This script contains common utility functions used across various scripts in the
 - **get_timestamp**: Get the current timestamp in the desired format.
 
 - **secure_delete**: Securely delete a file depending on the available command.
+
   - Arguments:
     - $1 - File path to be securely deleted
 
 - **sanitize_environment**: Securely delete a file depending on the available command.
+
   - Arguments:
     - $1 - Array of variables to sanitize
     - $2 - Array of files to securely delete
